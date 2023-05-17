@@ -239,7 +239,6 @@ uint32_t clone_rom(uint32_t Firmware_zise)
    		return 0;
     else
     	return 1;
-
 }
 
 void wait(void)
@@ -289,8 +288,6 @@ uint32_t update_firmware (void)
 		if(crc == crc_part)
 		{
 			a = write(&rx_buff[8],a);
-			printf(" \r WRITE OK \r\n");
-			printf(" \r a: %d \n",a);
 			printf(" \r crc: %X \n",crc);
 			HAL_UART_Transmit(&huart3,"OK", sizeof("OK"),500);
 			memset(rx_buff,'\0',sizeof(rx_buff));
@@ -319,15 +316,11 @@ uint32_t update_firmware (void)
 		if(crc == crc_part)
 		{
 			a = write(&rx_buff[8],a);
-			printf(" \r WRITE OK \r\n");
-			printf(" \r a: %d \n",a);
-			printf(" \r crc: %X \n",crc);
 			memset(rx_buff,'\0',sizeof(rx_buff));
 			printf(" \r crc parts: %04X \n",crc);
 			printf(" \r CRC Blink: %lX \n",CRC_16);//do
 		}
 	}
-
 //---------------- Validate -------------------------
 	const image_hdr_t *hdr = NULL;
 	hdr = image_get_header(IMAGE_SLOT_2);//magic
@@ -361,45 +354,6 @@ __attribute__( (naked, noreturn) ) static void BootJumpASM(uint32_t PC, uint32_t
 			msr msp, r1 /* load r1 into MSP */\n\
 			bx r0       /* branch to the address at r0 */\n\
 	");
-}
-
-
-void boot_jump(uint32_t *address) {
-	uint8_t i = 0;
-
-	/* Disable interrupts */
-	//Disable IRQ
-	__disable_irq();
-
-	//Disable the system timer
-	SysTick->CTRL = 0;
-
-	//Clear the exception pending bit
-	SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk ;
-
-	//Disable IRQs
-    for (i = 0; i < 8; i++) {
-        NVIC->ICER[i] = 0xFFFFFFFF; // disable IRQ
-        NVIC->ICPR[i] = 0xFFFFFFFF; // clear pending IRQ
-    }
-
-	/* Modify vector table location */
-	//Barriers
-	__DSB();
-	__ISB();
-
-	//Change the vector table
-	SCB->VTOR = (uint32_t)address & SCB_VTOR_TBLOFF_Msk;
-
-	//Barriers
-	__DSB();
-	__ISB();
-
-	/* Enable interrrupts */
-	__enable_irq();
-
-	/* Execute application */
-	BootJumpASM(address[1], address[0]);
 }
 
 static void image_start(const image_hdr_t *hdr) {
@@ -489,7 +443,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 	shared_memory_init();
-	printf("Start \r\n");
 	timer_flag = 0;
 	HAL_TIM_Base_Start_IT(&htim1);
 
@@ -848,29 +801,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim->Instance == TIM1)
 	  {
 		timer_flag = 1 ;
-		printf("\r ---------------- \r\n");
-		//bootloader = boot & timer_flag;
 	  }
-	/*if(timer_flag)// 100 ms
-	{
-		boot = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3);// 1/0
-		boot1_flag = timer_flag & boot;
-		printf("\r timer_flag: %d \r\n",timer_flag);
-		printf("\r boot: %d \r\n",boot);
-		printf("\r boot1_flag: %d \r\n",boot1_flag);
-	}
-	else// 100 ms
-	{
-		boot = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_3);// 1/0
-		boot2_flag = timer_flag & boot;
-		printf("\r timer_flag: %d \r\n",timer_flag);
-		printf("\r boot: %d \r\n",boot);
-		printf("\r boot2_flag: %d \r\n",boot2_flag);
-	}*/
-
-
-
 }
+//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
+//token 90days
 /* USER CODE END 4 */
 
 /**
